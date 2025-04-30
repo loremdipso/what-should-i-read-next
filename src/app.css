@@ -1,0 +1,292 @@
+:root {
+  font-family: sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.content > :not(.full-width),
+.output > :not(.full-width),
+.my-recipes > :not(.full-width) {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app,
+main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+
+  a:hover {
+    color: #747bff;
+  }
+
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* Generic */
+html {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: break-word;
+}
+
+body {
+  background: #3e3e42;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+}
+
+.scrollable, body>* {
+  overflow-y: scroll;
+}
+
+.max-h6 {
+  max-height: 6rem;
+}
+
+.no-padding {
+  padding: 0;
+}
+
+.no-style {
+  list-style-type: none;;
+}
+
+a {
+  text-decoration: none;
+  font-weight: bold;
+  color: #007acc;
+}
+
+button {
+  border-width: 0;
+  flex-grow: 1;
+  font-weight: bold;
+  color: white;
+  padding: 0.5rem;
+}
+
+a:hover,
+button:hover {
+  cursor: pointer;
+}
+
+button:disabled {
+  font-weight: normal;
+}
+
+.flex-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex {
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden {
+  display: none;
+}
+
+.black {
+  background: black;
+}
+
+.grey {
+	background: #142649;
+}
+
+.green {
+  background: #338356;
+}
+
+.gap1 {
+  gap: 1rem;
+}
+
+.m1 {
+  margin: 1rem;
+}
+
+.p1 {
+  padding: 1rem;
+}
+
+.mb1 {
+  margin-bottom: 1rem;
+}
+
+.mt1 {
+  margin-top: 1rem;
+}
+
+.blue {
+  background: #007acc;
+}
+
+.purple {
+  background: #4d0058;
+}
+
+.pink {
+  background: #fa8072;
+}
+
+.red {
+  background: red;
+}
+
+.right {
+  text-align: right;
+  align-items: right;
+  justify-content: right;
+}
+
+.center {
+  align-items: center;
+}
+
+.block-center {
+  width: 100%;
+  display: block;
+  text-align: center;
+}
+
+.bottom {
+  align-items: end;
+}
+
+.full-width {
+  display: flex;
+  width: 100%;
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.shrink {
+  flex-grow: 0;
+}
+
+.no-margin {
+  margin: 0;
+}
+
+.selectable:hover {
+  cursor: pointer;
+}
+
+/* Specific */
+main {
+  overflow-y: scroll;
+}
+
+.output {
+  color: white;
+  padding-bottom: 5rem;
+  overflow-y: scroll;
+}
+
+label:has(input[type="checkbox"]) {
+  cursor: pointer;
+}
+
+.list input:checked+* {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.list label {
+  display: flex;
+  gap: 10px;
+  padding: 0.5rem;
+  overflow: hidden;
+}
+
+.list label:nth-child(even) {
+  background-color: #1a1a1a;
+}
+
+.list label:nth-child(odd) {
+  background-color: black;
+}
+
+label {
+  line-height: 2rem;
+}
+
+label>div {
+  overflow-x: scroll;
+}
+
+label.selected {
+  background: #310f0b !important;
+}
+
+.quantity-control {
+  margin: 0.2rem;
+}
+
+.rounded-button.selected {
+  color: black;
+  background: white;
+}
+
+.failed,
+.unknown {
+  background-color: red;
+}
+
+.subtitle {
+  font-style: italic;
+  margin-left: 1rem;
+}

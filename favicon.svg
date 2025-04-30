@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="36.912609mm"
+   height="36.912609mm"
+   viewBox="0 0 36.912609 36.912609"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="favicon.svg"
+   inkscape:export-filename="/home/madams/favicon-512x512.png"
+   inkscape:export-xdpi="352.31"
+   inkscape:export-ydpi="352.31"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="true"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="2.0123442"
+     inkscape:cx="40.251563"
+     inkscape:cy="47.45709"
+     inkscape:window-width="2560"
+     inkscape:window-height="1403"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-49.247475,-33.421444)">
+    <path
+       sodipodi:type="star"
+       style="fill:#ffb380;stroke-width:377.953;stroke-linecap:round;stroke-miterlimit:3.98"
+       id="path19533"
+       inkscape:flatsided="false"
+       sodipodi:sides="8"
+       sodipodi:cx="-83.899371"
+       sodipodi:cy="-1.6803028"
+       sodipodi:r1="74.447678"
+       sodipodi:r2="69.20504"
+       sodipodi:arg1="0.85855019"
+       sodipodi:arg2="1.1945088"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m -35.24517,54.668836 -23.223405,8.013989 -30.871938,9.885446 -22.088177,-10.754682 -28.81982,-14.839691 -8.01399,-23.223406 -9.88544,-30.8719375 10.75468,-22.0881735 14.83969,-28.819823 23.2234,-8.013989 30.871942,-9.885445 22.088174,10.754681 28.819822,14.839691 8.013989,23.223406 9.885446,30.8719378 -10.754682,22.0881732 z"
+       transform="matrix(0.24252688,0,0,0.24252688,88.051632,52.285267)" />
+    <rect
+       style="fill:none;stroke:none;stroke-width:4.665;stroke-linecap:round;stroke-miterlimit:3.9"
+       id="rect846"
+       width="32.247608"
+       height="32.247608"
+       x="51.579975"
+       y="35.753944" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:22.5778px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:0.264583"
+       x="51.730026"
+       y="59.77998"
+       id="text5186"><tspan
+         sodipodi:role="line"
+         id="tspan5184"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:22.5778px;font-family:'Latin Modern Roman Demi';-inkscape-font-specification:'Latin Modern Roman Demi';stroke:#ffffff;stroke-width:0.264583"
+         x="51.730026"
+         y="59.77998">???</tspan></text>
+  </g>
+</svg>
