@@ -1,7 +1,7 @@
 {
-	"short_name": "Recipe Scraper",
-	"name": "Recipe Scraper",
-	"description": "Scrape recipes!",
+	"short_name": "What should I read next?",
+	"name": "What should I read next?",
+	"description": "Find out what I should read next",
 	"icons": [
 		{
 			"src": "favicon-192x192.png",
