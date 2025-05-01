@@ -153,6 +153,10 @@ button:disabled {
 	background: #142649;
 }
 
+.dark-purple {
+  background: #570035
+}
+
 .green {
   background: #338356;
 }
@@ -286,11 +290,11 @@ label:has(input[type="checkbox"]) {
 }
 
 .list label:nth-child(even) {
-  background-color: #1a1a1a;
+  background: #1a1a1a;
 }
 
 .list label:nth-child(odd) {
-  background-color: black;
+  background: black;
 }
 
 label {
@@ -326,4 +330,9 @@ label.selected {
 
 .description {
   font-size: 10px;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
 }

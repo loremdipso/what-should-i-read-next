@@ -134,11 +134,19 @@
 
 					{#if results.length}
 						{#each results as result}
-							<div class="m1 flex-col gap1">
-								<div class="flex-row center">
-									<h2>
+							<div class="flex-col gap1">
+								<div class="flex-row center sticky dark-purple">
+									<h2 class="no-spacing m0 pw1">
 										{result.query}
 									</h2>
+									<!-- <div class="flex-row right">
+										<a
+											href={get_libby_url(result.query)}
+											target="_blank"
+										>
+											Open search in libby
+										</a>
+									</div> -->
 									<button
 										class="shrink"
 										onclick={async (event) => {
@@ -155,14 +163,6 @@
 									</button>
 								</div>
 								{#if !collapsed[result.query]}
-									<div class="flex-row right">
-										<a
-											href={get_libby_url(result.query)}
-											target="_blank"
-										>
-											Open search in libby
-										</a>
-									</div>
 									{#each result.books as book}
 										{#if !result.match || book.title === result.match}
 											<div class="black p1 purple">
