@@ -27,29 +27,41 @@ export async function find_books(
 	libraries: string[],
 	force_reload: boolean
 ): Promise<IResult[]> {
-	const cache = force_reload ? [] : get_cache();
+	const cache = get_cache();
 	let results = await Promise.all(
-		items.map(async (item) => ({
-			query: item,
-			books: await find_single_book(cache, item, libraries),
-		}))
+		items.map(async (item) => {
+			let cache_value = cache.find((result) => result.query === item);
+			if (cache_value && !force_reload) {
+				console.info("hit the cache!");
+				return cache_value;
+			}
+
+			let result: IResult = {
+				query: item,
+				books: await find_single_book(item, libraries),
+				match: cache_value?.match,
+			};
+			return result;
+		})
 	);
+
+	for (let result of results) {
+		if (
+			result.match &&
+			!result.books.find((book) => book.title === result.match)
+		) {
+			result.match = undefined;
+		}
+	}
+
 	add_results_to_cache(results);
 	return results;
 }
 
 export async function find_single_book(
-	cache: IResult[],
 	query: string,
 	libraries: string[]
 ): Promise<IBook[]> {
-	for (const result of cache) {
-		if (result.query == query) {
-			console.info("hit the cache!");
-			return result.books;
-		}
-	}
-
 	console.info("didn't hit the cache :/");
 	query = fix_query(query);
 	let books = [];
@@ -59,10 +71,15 @@ export async function find_single_book(
 		let json = await response.json();
 		for (let item of json.items) {
 			if (item.isAvailable) {
+				console.log(item);
 				let book: IBook = {
+					id: item.id,
 					title: item.title,
 					subtitle: item.subtitle,
 					description: item.description,
+					cover: Object.values(item.covers || {}).map(
+						(e: any) => e.href
+					)[0] as any,
 					subjects: (item.subjects || [])
 						.map((e: any) => e.name)
 						.join(", "),
@@ -97,4 +114,10 @@ export function fix_query(query: string): string {
 		.replaceAll(/,.*/g, "")
 		.replaceAll(/ by .*/g, "")
 		.toLowerCase();
+}
+
+export function get_libby_url(query: string): string {
+	return `https://libbyapp.com/search/spl/search/audiobooks/query-${fix_query(
+		query
+	)}/page-1`;
 }

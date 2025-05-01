@@ -54,6 +54,11 @@ export function get_cache(): IResult[] {
 	// }
 }
 
+export function clear_cache() {
+	overall_cache = [];
+	localStorage.setItem(KEYS.CACHE, JSON.stringify([]));
+}
+
 const max_cache_length = 150;
 export function add_results_to_cache(results: IResult[]) {
 	// Only keep the most result of these results

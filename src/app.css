@@ -127,6 +127,10 @@ button:disabled {
   justify-content: space-between;
 }
 
+.space-around {
+  justify-content: space-around;
+}
+
 .flex-col {
   display: flex;
   flex-direction: column;
@@ -157,12 +161,24 @@ button:disabled {
   gap: 1rem;
 }
 
+.gap0_5 {
+  gap: 0.5rem;
+}
+
 .m1 {
   margin: 1rem;
 }
 
 .p1 {
   padding: 1rem;
+}
+
+.p0_5 {
+  padding: 0.5rem;
+}
+
+.m0_5 {
+  margin: 0.5rem;
 }
 
 .pw1 {

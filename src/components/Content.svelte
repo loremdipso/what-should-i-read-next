@@ -2,6 +2,8 @@
 	import type { IBook, IList, IResult } from "../lib/types";
 	import {
 		add_list,
+		add_results_to_cache,
+		clear_cache,
 		delete_list,
 		get_all_lists,
 		get_libraries,
@@ -11,10 +13,12 @@
 	import {
 		find_books,
 		fix_query,
+		get_libby_url,
 		shuffle,
 		try_parse_list,
 	} from "../lib/utils";
 	import { notify, install_prompt } from "../lib/globals.svelte";
+	import SlideCheck from "./SlideCheck.svelte";
 
 	function reload() {
 		lists = get_all_lists();
@@ -65,6 +69,13 @@
 			Copy from clipboard
 		</button>
 		<button
+			onclick={async () => {
+				clear_cache();
+			}}
+		>
+			Clear cache
+		</button>
+		<button
 			id="install-button"
 			class="purple"
 			hidden={!install_prompt.prompt || installed}
@@ -86,27 +97,27 @@
 		{#if current_list}
 			<div class="card selectable black flex-col gap1">
 				{#if results}
-					{#if results.length}
-						<div class="flex-row">
-							<button
-								onclick={async (event) => {
-									event.stopPropagation();
-									current_list = null;
-								}}
-							>
-								Close
-							</button>
-							<button
-								class="blue"
-								onclick={async (event) => {
-									event.stopPropagation();
-									if (current_list) {
-										set_current_list(current_list, true);
-									}
-								}}
-							>
-								Reload
-							</button>
+					<div class="flex-row">
+						<button
+							onclick={async (event) => {
+								event.stopPropagation();
+								current_list = null;
+							}}
+						>
+							Close
+						</button>
+						<button
+							class="blue"
+							onclick={async (event) => {
+								event.stopPropagation();
+								if (current_list) {
+									set_current_list(current_list, true);
+								}
+							}}
+						>
+							Reload
+						</button>
+						{#if results.length}
 							<button
 								class="purple"
 								onclick={async (event) => {
@@ -118,8 +129,10 @@
 							>
 								Shuffle
 							</button>
-						</div>
+						{/if}
+					</div>
 
+					{#if results.length}
 						{#each results as result}
 							<div class="m1 flex-col gap1">
 								<div class="flex-row center">
@@ -144,56 +157,106 @@
 								{#if !collapsed[result.query]}
 									<div class="flex-row right">
 										<a
-											href={`https://libbyapp.com/search/spl/search/audiobooks/query-${fix_query(result.query)}/page-1`}
+											href={get_libby_url(result.query)}
 											target="_blank"
 										>
 											Open search in libby
 										</a>
 									</div>
 									{#each result.books as book}
-										<div class="black p1 purple">
-											<h3 class="no-spacing">
-												{book.title}
-											</h3>
-											{#if book.duration}
-												<h6 class="no-spacing subtitle">
-													Duration {book.duration}
-												</h6>
-											{/if}
-											{#if book.author}
-												<hr />
-												<h4 class="no-spacing subtitle">
-													{book.author}
-												</h4>
-											{/if}
-											{#if book.subtitle}
-												<hr />
-												<h4 class="no-spacing subtitle">
-													{book.subtitle}
-												</h4>
-											{/if}
-											{#if book.description}
-												<hr />
-												<p
-													class="no-spacing subtitle description"
-												>
-													{@html book.description}
-												</p>
-											{/if}
-											{#if book.subjects}
-												<hr />
-												<h6 class="no-spacing subtitle">
-													{book.subjects}
-												</h6>
-											{/if}
-											<a
-												href={book.sample}
-												target="_blank"
-												class="block-center"
-											>
-												sample
-											</a>
-										</div>
+										{#if !result.match || book.title === result.match}
+											<div class="black p1 purple">
+												<div class="flex-row gap1">
+													{#if book.cover}
+														<img
+															src={book.cover}
+															alt="Cover"
+														/>
+													{/if}
+													<div class="grow">
+														<h3 class="no-spacing">
+															{book.title}
+														</h3>
+														{#if book.author}
+															<h4
+																class="no-spacing subtitle"
+															>
+																{book.author}
+															</h4>
+														{/if}
+														{#if book.duration}
+															<h6
+																class="no-spacing subtitle"
+															>
+																Duration {book.duration}
+															</h6>
+														{/if}
+													</div>
+												</div>
+												{#if book.subtitle}
+													<hr />
+													<h4
+														class="no-spacing subtitle"
+													>
+														{book.subtitle}
+													</h4>
+												{/if}
+												{#if book.description}
+													<hr />
+													<p
+														class="no-spacing subtitle description"
+													>
+														{@html book.description}
+													</p>
+												{/if}
+												{#if book.subjects}
+													<hr />
+													<h6
+														class="no-spacing subtitle"
+													>
+														{book.subjects}
+													</h6>
+												{/if}
+												<SlideCheck
+													text="This is the match"
+													onchange={(checked) => {
+														if (checked) {
+															result.match =
+																book.title;
+														} else {
+															result.match =
+																undefined;
+														}
+														add_results_to_cache([
+															$state.snapshot(
+																result
+															),
+														]);
+													}}
+													checked={Boolean(
+														book.title &&
+															book.title ===
+																result.match
+													)}
+												/>
+												<div class="flex-row">
+													<a
+														href={book.sample}
+														target="_blank"
+													>
+														sample
+													</a>
+													<a
+														href={get_libby_url(
+															book.title
+														)}
+														target="_blank"
+													>
+														Open search in libby
+													</a>
+												</div>
+											</div>
+										{/if}
 									{/each}
 								{/if}
 							</div>
@@ -219,7 +282,7 @@
 									save_lists(lists);
 								}}
 							/>
-							<button
+							<!-- <button
 								class="green shrink"
 								onclick={async (event) => {
 									event.stopPropagation();
@@ -227,15 +290,24 @@
 								}}
 							>
 								Search
-							</button>
+							</button> -->
 						</div>
 						<div class="right">
 							{list.items.length} rows
 						</div>
-						<div class="flex-row space-around">
-							<div class="flex-col grow">
+						<div class="flex-row gap0_5">
+							<div class="flex-col grow gap0_5">
 								<button
-									class="blue"
+									class="green p0_5"
+									onclick={async (event) => {
+										event.stopPropagation();
+										set_current_list(list);
+									}}
+								>
+									Search all
+								</button>
+								<button
+									class="blue p0_5"
 									onclick={async (event) => {
 										event.stopPropagation();
 										let new_list = structuredClone(
@@ -248,7 +320,7 @@
 									Search first 10
 								</button>
 								<button
-									class="purple"
+									class="purple p0_5"
 									onclick={async (event) => {
 										event.stopPropagation();
 										let new_list = structuredClone(
@@ -262,26 +334,29 @@
 									Search random 10
 								</button>
 							</div>
-							<button
-								onclick={async () => {
-									await navigator.clipboard.writeText(
-										list.items.join("\n")
-									);
-									notify("Copied to clipboard :)");
-								}}
-							>
-								Copy list to clipboard
-							</button>
-							<button
-								class="red"
-								onclick={async (event) => {
-									event.stopPropagation();
-									delete_list(lists, list);
-									reload();
-								}}
-							>
-								Delete
-							</button>
+							<div class="flex-col grow gap0_5">
+								<button
+									class="p0_5"
+									onclick={async () => {
+										await navigator.clipboard.writeText(
+											list.items.join("\n")
+										);
+										notify("Copied to clipboard :)");
+									}}
+								>
+									Copy list to clipboard
+								</button>
+								<button
+									class="red p0_5"
+									onclick={async (event) => {
+										event.stopPropagation();
+										delete_list(lists, list);
+										reload();
+									}}
+								>
+									Delete list
+								</button>
+							</div>
 						</div>
 						<ul
 							class="scrollable no-padding no-style flex-col gap1"
