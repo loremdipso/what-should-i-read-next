@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { writable } from "svelte/store";
 	import type { IBook, IList, IResult } from "../lib/types";
 	import {
 		add_list,
@@ -10,13 +9,7 @@
 		save_lists,
 	} from "../lib/data";
 	import { find_books, shuffle, try_parse_list } from "../lib/utils";
-	import { notify } from "../lib/globals.svelte";
-
-	let installPrompt = $state<any>(null);
-	window.addEventListener("beforeinstallprompt", (event) => {
-		event.preventDefault();
-		installPrompt = event;
-	});
+	import { notify, install_prompt } from "../lib/globals.svelte";
 
 	function reload() {
 		lists = get_all_lists();
@@ -39,6 +32,7 @@
 	let libraries = $derived(
 		libraries_raw.split(",").map((e) => e.trim().toLowerCase())
 	);
+	let installed = $state(false);
 
 	$effect(() => {
 		save_libraries(libraries);
@@ -69,10 +63,10 @@
 		<button
 			id="install-button"
 			class="purple"
-			hidden={!installPrompt}
+			hidden={!install_prompt.prompt || installed}
 			onclick={async () => {
-				await installPrompt.prompt();
-				installPrompt = null;
+				await install_prompt.prompt.prompt();
+				installed = true;
 			}}
 		>
 			Install

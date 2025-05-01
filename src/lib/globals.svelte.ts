@@ -5,7 +5,7 @@ export interface INotification {
 	id: number;
 }
 
-const notifications: INotification[] = $state([]);
+export const notifications: INotification[] = $state([]);
 
 export function notify(text: string, extra_class = "") {
 	console.info(text);
@@ -21,4 +21,8 @@ export function remove_notification(notification: INotification) {
 	}
 }
 
-export { notifications };
+export let install_prompt: { prompt: any } = $state({ prompt: null });
+window.addEventListener("beforeinstallprompt", (event) => {
+	event.preventDefault();
+	install_prompt.prompt = event;
+});
