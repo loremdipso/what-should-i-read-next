@@ -51,7 +51,6 @@
 					notify("Loading...");
 					add_list(list);
 					reload();
-					current_list = list;
 				} catch (e) {
 					console.error(e);
 					notify("ERROR: that doesn't look like a list", "error");
