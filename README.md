@@ -1,4 +1,4 @@
-# Recipe Scraper
+# What should I read next?
 
 Simple [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) that you can install on phone or desktop. This will attempt to find books at your local library that are currently available that also (probably) match some item on your list.
 
