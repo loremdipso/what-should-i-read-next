@@ -1,6 +1,6 @@
 import { KEYS } from "./constants";
 import { notify } from "./globals.svelte";
-import type { IList } from "./types";
+import type { IList, IResult } from "./types";
 
 export function get_libraries(): string[] {
 	try {
@@ -28,16 +28,6 @@ export function save_lists(lists: IList[]) {
 	localStorage.setItem(KEYS.LISTS, JSON.stringify(lists));
 }
 
-export function find_list_by_url(url: string): IList | null {
-	let lists = get_all_lists();
-	for (let list of lists) {
-		if (list.url === url) {
-			return list;
-		}
-	}
-	return null;
-}
-
 export function add_list(data: IList): IList[] {
 	let lists = get_all_lists();
 	lists.push(data);
@@ -49,4 +39,38 @@ export function delete_list(lists: IList[], list_to_delete: IList): IList[] {
 	lists = lists.filter((e) => e !== list_to_delete);
 	save_lists(lists);
 	return lists;
+}
+
+let overall_cache: IResult[] = JSON.parse(
+	localStorage.getItem(KEYS.CACHE) || "[]"
+);
+export function get_cache(): IResult[] {
+	return structuredClone(overall_cache);
+	// try {
+	// 	return JSON.parse(localStorage.getItem(KEYS.CACHE) || "[]");
+	// } catch (e) {
+	// 	console.error(e);
+	// 	return [];
+	// }
+}
+
+const max_cache_length = 150;
+export function add_results_to_cache(results: IResult[]) {
+	// Only keep the most result of these results
+	for (let result of results) {
+		let index: number = 0;
+		while (
+			(index = overall_cache.findIndex((e) => e.query === result.query)) >
+			-1
+		) {
+			overall_cache.splice(index, 1);
+		}
+
+		overall_cache.push(result);
+	}
+
+	// Save the last n to browser storage
+	const cache = [...results, ...get_cache()];
+	cache.splice(max_cache_length);
+	localStorage.setItem(KEYS.CACHE, JSON.stringify(cache));
 }

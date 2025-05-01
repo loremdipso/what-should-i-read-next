@@ -1,8 +1,9 @@
+import { add_results_to_cache, get_cache } from "./data";
 import type { IBook, IList, IResult } from "./types";
 
 export function try_parse_list(text: string): IList {
 	try {
-		let contents = JSON.parse(text);
+		let contents = JSON.parse(text.replaceAll(`\\"`, `\"`));
 		if (contents instanceof Array) {
 			if (!contents.find((e) => e instanceof String)) {
 				return {
@@ -23,20 +24,33 @@ export function try_parse_list(text: string): IList {
 
 export async function find_books(
 	items: string[],
-	libraries: string[]
+	libraries: string[],
+	force_reload: boolean
 ): Promise<IResult[]> {
-	return Promise.all(
+	const cache = force_reload ? [] : get_cache();
+	let results = await Promise.all(
 		items.map(async (item) => ({
 			query: item,
-			books: await find_single_book(item, libraries),
+			books: await find_single_book(cache, item, libraries),
 		}))
 	);
+	add_results_to_cache(results);
+	return results;
 }
 
 export async function find_single_book(
+	cache: IResult[],
 	query: string,
 	libraries: string[]
 ): Promise<IBook[]> {
+	for (const result of cache) {
+		if (result.query == query) {
+			console.info("hit the cache!");
+			return result.books;
+		}
+	}
+
+	console.info("didn't hit the cache :/");
 	query = query
 		.replaceAll(/,.*/g, "")
 		.replaceAll(/ by .*/g, "")
@@ -61,4 +75,16 @@ export async function find_single_book(
 	}
 
 	return books;
+}
+
+export function shuffle<T>(array: T[]) {
+	for (let i = array.length - 1; i > 0; i--) {
+		// Generate random index
+		const j = Math.floor(Math.random() * (i + 1));
+
+		// Swap elements at indices i and j
+		const temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
 }

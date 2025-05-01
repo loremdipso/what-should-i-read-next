@@ -9,7 +9,7 @@
 		save_libraries,
 		save_lists,
 	} from "../lib/data";
-	import { find_books, try_parse_list } from "../lib/utils";
+	import { find_books, shuffle, try_parse_list } from "../lib/utils";
 	import { notify } from "../lib/globals.svelte";
 
 	let installPrompt = $state<any>(null);
@@ -22,14 +22,19 @@
 		lists = get_all_lists();
 	}
 
-	async function set_current_list(list: IList) {
+	async function set_current_list(list: IList, force_reload = false) {
+		results = null;
 		current_list = list;
-		results = await find_books(current_list.items, libraries);
+		collapsed = {};
+		results = (
+			await find_books(current_list.items, libraries, force_reload)
+		).filter((e) => e.books.length);
 	}
 
 	let current_list = $state<IList | null>(null);
 	let results = $state<IResult[] | null>(null);
 	let lists = $state(get_all_lists());
+	let collapsed = $state<{ [key: string]: boolean }>({});
 	let libraries_raw = $state(get_libraries().join(", "));
 	let libraries = $derived(
 		libraries_raw.split(",").map((e) => e.trim().toLowerCase())
@@ -40,53 +45,27 @@
 	});
 </script>
 
-<main>
+<main class="flex-col gap1">
 	<div class="flex-row">
 		<button
 			class="green"
 			onclick={async () => {
-				const items = await navigator.clipboard.read();
-				for (const item of items) {
-					for (const type of item.types) {
-						const blob = await item.getType(type);
-						const text = await blob.text();
-						current_list = null;
-						try {
-							let list = try_parse_list(text);
-							notify("Loading...");
-							add_list(list);
-							reload();
-							current_list = list;
-						} catch (e) {
-							console.error(e);
-							notify(
-								"ERROR: that doesn't look like a list",
-								"error"
-							);
-						}
-
-						return;
-					}
+				current_list = null;
+				const text = await navigator.clipboard.readText();
+				try {
+					let list = try_parse_list(text);
+					notify("Loading...");
+					add_list(list);
+					reload();
+					current_list = list;
+				} catch (e) {
+					console.error(e);
+					notify("ERROR: that doesn't look like a list", "error");
 				}
 			}}
 		>
 			Copy from clipboard
 		</button>
-		<button
-			class="blue"
-			disabled={!current_list}
-			onclick={async () => {
-				if (current_list) {
-					await navigator.clipboard.writeText(
-						current_list.items.join("\n")
-					);
-					notify("Copied markdown to clipboard :)");
-				}
-			}}
-		>
-			Copy to clipboard
-		</button>
-
 		<button
 			id="install-button"
 			class="purple"
@@ -100,54 +79,99 @@
 		</button>
 	</div>
 
-	<label class="full-width grow">
-		Libraries:
-		<input class="grow" bind:value={libraries_raw} />
-	</label>
+	<div class="scrollable pb5">
+		<label class="grow">
+			Libraries:
+			<input class="grow" bind:value={libraries_raw} />
+		</label>
 
-	<div class="output">
 		{#if current_list}
 			<div class="card selectable black flex-col gap1">
 				{#if results}
-					<button
-						class="blue"
-						onclick={async (event) => {
-							event.stopPropagation();
-							if (current_list) {
-								set_current_list(current_list);
-							}
-						}}
-					>
-						Reload
-					</button>
+					{#if results.length}
+						<div class="flex-row">
+							<button
+								onclick={async (event) => {
+									event.stopPropagation();
+									current_list = null;
+								}}
+							>
+								Close
+							</button>
+							<button
+								class="blue"
+								onclick={async (event) => {
+									event.stopPropagation();
+									if (current_list) {
+										set_current_list(current_list, true);
+									}
+								}}
+							>
+								Reload
+							</button>
+							<button
+								class="purple"
+								onclick={async (event) => {
+									event.stopPropagation();
+									if (results) {
+										shuffle(results);
+									}
+								}}
+							>
+								Shuffle
+							</button>
+						</div>
 
-					{#each results as result}
-						{#if result.books.length}
+						{#each results as result}
 							<div class="m1">
-								<h2>
-									{result.query}
-								</h2>
-								{#each result.books as book}
-									<div class="black m1 purple">
-										<h3>{book.title}</h3>
-										<h4 class="subtitle">{book.author}</h4>
-										<h4 class="subtitle">
-											{book.subtitle}
-										</h4>
-										<a
-											href={book.sample}
-											target="_blank"
-											class="block-center"
-										>
-											sample
-										</a>
-									</div>
-								{/each}
+								<div class="flex-row">
+									<h2>
+										{result.query}
+									</h2>
+									<button
+										class="shrink"
+										onclick={async (event) => {
+											event.stopPropagation();
+											collapsed[result.query] =
+												!collapsed[result.query];
+										}}
+									>
+										{#if collapsed[result.query]}
+											Expand
+										{:else}
+											Collapse
+										{/if}
+									</button>
+								</div>
+								{#if !collapsed[result.query]}
+									{#each result.books as book}
+										<div class="black m1 purple">
+											<h3 class="no-spacing">
+												{book.title}
+											</h3>
+											<h4 class="no-spacing subtitle">
+												{book.author}
+											</h4>
+											<h4 class="no-spacing subtitle">
+												{book.subtitle}
+											</h4>
+											<a
+												href={book.sample}
+												target="_blank"
+												class="block-center"
+											>
+												sample
+											</a>
+										</div>
+									{/each}
+								{/if}
 							</div>
-						{/if}
-					{/each}
+						{/each}
+					{:else}
+						<h3>No results :/</h3>
+					{/if}
 				{:else}
-					Searching...
+					<h3>Searching...</h3>
 				{/if}
 			</div>
 		{/if}
@@ -155,22 +179,68 @@
 		<div class="flex-col gap1">
 			<div class="flex-col gap1">
 				{#each lists as list}
-					<div
-						class="card selectable black m1 p1"
-						role="button"
-						tabindex="0"
-						onclick={(event) => {
-							event.stopPropagation();
-							set_current_list(list);
-						}}
-						onkeypress={(event) => {
-							// TODO
-						}}
-					>
+					<div class="card selectable black m1 p1 flex-col">
+						<div class="flex-row">
+							<input
+								class="grow flex-row p1"
+								bind:value={list.title}
+								onchange={() => {
+									save_lists(lists);
+								}}
+							/>
+							<button
+								class="green shrink"
+								onclick={async (event) => {
+									event.stopPropagation();
+									set_current_list(list);
+								}}
+							>
+								Search
+							</button>
+						</div>
+						<div class="right">
+							{list.items.length} rows
+						</div>
 						<div class="flex-row space-around">
-							<h3 class="grow">
-								{list.title}
-							</h3>
+							<div class="flex-col">
+								<button
+									class="blue"
+									onclick={async (event) => {
+										event.stopPropagation();
+										let new_list = structuredClone(
+											$state.snapshot(list)
+										);
+										new_list.items.splice(10);
+										set_current_list(new_list);
+									}}
+								>
+									Search first 10
+								</button>
+								<button
+									class="purple"
+									onclick={async (event) => {
+										event.stopPropagation();
+										let new_list = structuredClone(
+											$state.snapshot(list)
+										);
+										shuffle(new_list.items);
+										new_list.items.splice(10);
+										set_current_list(new_list);
+									}}
+								>
+									Search random 10
+								</button>
+							</div>
+							<button
+								onclick={async () => {
+									await navigator.clipboard.writeText(
+										list.items.join("\n")
+									);
+									notify("Copied to clipboard :)");
+								}}
+							>
+								Copy to clipboard
+							</button>
 							<button
 								class="red"
 								onclick={async (event) => {
@@ -181,24 +251,16 @@
 							>
 								Delete
 							</button>
-							<button
-								class="green"
-								onclick={async (event) => {
-									event.stopPropagation();
-									set_current_list(list);
-								}}
-							>
-								Search
-							</button>
 						</div>
 						<ul
 							class="scrollable no-padding no-style flex-col gap1"
+							style="max-height: 30vh"
 						>
 							{#each list.items as item}
-								<li class="grey">
-									{item}
+								<li class="grey flex-row">
+									<span class="grow p1">{item}</span>
 									<button
-										class="red"
+										class="red shrink"
 										onclick={async (event) => {
 											event.stopPropagation();
 											let index =
