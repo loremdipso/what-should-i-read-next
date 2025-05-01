@@ -307,3 +307,7 @@ label.selected {
   font-style: italic;
   margin-left: 1rem;
 }
+
+.description {
+  font-size: 10px;
+}

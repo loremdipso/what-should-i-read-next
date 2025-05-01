@@ -5,7 +5,10 @@ export interface IList {
 
 export interface IBook {
 	title: string;
-	subtitle: string;
+	subtitle?: string;
+	description?: string;
+	subjects?: string;
+	duration?: string;
 	author: string;
 	sample: string;
 }

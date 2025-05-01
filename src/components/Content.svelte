@@ -8,7 +8,12 @@
 		save_libraries,
 		save_lists,
 	} from "../lib/data";
-	import { find_books, shuffle, try_parse_list } from "../lib/utils";
+	import {
+		find_books,
+		fix_query,
+		shuffle,
+		try_parse_list,
+	} from "../lib/utils";
 	import { notify, install_prompt } from "../lib/globals.svelte";
 
 	function reload() {
@@ -116,8 +121,8 @@
 						</div>
 
 						{#each results as result}
-							<div class="m1">
-								<div class="flex-row">
+							<div class="m1 flex-col gap1">
+								<div class="flex-row center">
 									<h2>
 										{result.query}
 									</h2>
@@ -137,17 +142,50 @@
 									</button>
 								</div>
 								{#if !collapsed[result.query]}
+									<div class="flex-row right">
+										<a
+											href={`https://libbyapp.com/search/spl/search/audiobooks/query-${fix_query(result.query)}/page-1`}
+											target="_blank"
+										>
+											Open search in libby
+										</a>
+									</div>
 									{#each result.books as book}
-										<div class="black m1 purple">
+										<div class="black p1 purple">
 											<h3 class="no-spacing">
 												{book.title}
 											</h3>
-											<h4 class="no-spacing subtitle">
-												{book.author}
-											</h4>
-											<h4 class="no-spacing subtitle">
-												{book.subtitle}
-											</h4>
+											{#if book.duration}
+												<h6 class="no-spacing subtitle">
+													Duration {book.duration}
+												</h6>
+											{/if}
+											{#if book.author}
+												<hr />
+												<h4 class="no-spacing subtitle">
+													{book.author}
+												</h4>
+											{/if}
+											{#if book.subtitle}
+												<hr />
+												<h4 class="no-spacing subtitle">
+													{book.subtitle}
+												</h4>
+											{/if}
+											{#if book.description}
+												<hr />
+												<p
+													class="no-spacing subtitle description"
+												>
+													{@html book.description}
+												</p>
+											{/if}
+											{#if book.subjects}
+												<hr />
+												<h6 class="no-spacing subtitle">
+													{book.subjects}
+												</h6>
+											{/if}
 											<a
 												href={book.sample}
 												target="_blank"
@@ -195,7 +233,7 @@
 							{list.items.length} rows
 						</div>
 						<div class="flex-row space-around">
-							<div class="flex-col">
+							<div class="flex-col grow">
 								<button
 									class="blue"
 									onclick={async (event) => {
@@ -232,7 +270,7 @@
 									notify("Copied to clipboard :)");
 								}}
 							>
-								Copy to clipboard
+								Copy list to clipboard
 							</button>
 							<button
 								class="red"

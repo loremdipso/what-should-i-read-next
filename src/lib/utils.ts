@@ -51,10 +51,7 @@ export async function find_single_book(
 	}
 
 	console.info("didn't hit the cache :/");
-	query = query
-		.replaceAll(/,.*/g, "")
-		.replaceAll(/ by .*/g, "")
-		.toLowerCase();
+	query = fix_query(query);
 	let books = [];
 	for (let library of libraries) {
 		let url = `https://thunder.api.overdrive.com/v2/libraries/${library}/media?query=${query}&format=audiobook-overdrive,audiobook-mp3&page=1&perPage=20`;
@@ -63,9 +60,15 @@ export async function find_single_book(
 		for (let item of json.items) {
 			if (item.isAvailable) {
 				let book: IBook = {
-					// id: item.id,
 					title: item.title,
 					subtitle: item.subtitle,
+					description: item.description,
+					subjects: (item.subjects || [])
+						.map((e: any) => e.name)
+						.join(", "),
+					duration: (item.formats || []).map(
+						(e: any) => e.duration
+					)[0],
 					author: item.firstCreatorName,
 					sample: item.sample.href,
 				};
@@ -87,4 +90,11 @@ export function shuffle<T>(array: T[]) {
 		array[i] = array[j];
 		array[j] = temp;
 	}
+}
+
+export function fix_query(query: string): string {
+	return query
+		.replaceAll(/,.*/g, "")
+		.replaceAll(/ by .*/g, "")
+		.toLowerCase();
 }

@@ -30,7 +30,7 @@ export function save_lists(lists: IList[]) {
 
 export function add_list(data: IList): IList[] {
 	let lists = get_all_lists();
-	lists.push(data);
+	lists.splice(0, 0, data);
 	save_lists(lists);
 	return lists;
 }
