@@ -29,20 +29,23 @@ export async function find_books(
 ): Promise<IResult[]> {
 	const cache = get_cache();
 	let results = await Promise.all(
-		items.map(async (item) => {
-			let cache_value = cache.find((result) => result.query === item);
-			if (cache_value && !force_reload) {
-				console.info("hit the cache!");
-				return cache_value;
-			}
+		items
+			.map((e) => e.trim())
+			.filter((e) => e.length)
+			.map(async (item) => {
+				let cache_value = cache.find((result) => result.query === item);
+				if (cache_value && !force_reload) {
+					console.info("hit the cache!");
+					return cache_value;
+				}
 
-			let result: IResult = {
-				query: item,
-				books: await find_single_book(item, libraries),
-				match: cache_value?.match,
-			};
-			return result;
-		})
+				let result: IResult = {
+					query: item,
+					books: await find_single_book(item, libraries),
+					match: cache_value?.match,
+				};
+				return result;
+			})
 	);
 
 	for (let result of results) {

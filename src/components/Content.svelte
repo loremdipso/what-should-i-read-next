@@ -12,7 +12,6 @@
 	} from "../lib/data";
 	import {
 		find_books,
-		fix_query,
 		get_libby_url,
 		shuffle,
 		try_parse_list,
@@ -25,7 +24,7 @@
 	}
 
 	async function set_current_list(list: IList, force_reload = false) {
-		results = null;
+		results = undefined;
 		current_list = list;
 		collapsed = {};
 		results = (
@@ -33,15 +32,50 @@
 		).filter((e) => e.books.length);
 	}
 
+	let filters = $state({ only_matches: false, only_non_matches: false });
 	let current_list = $state<IList | null>(null);
-	let results = $state<IResult[] | null>(null);
+	let results = $state<IResult[] | undefined>(undefined);
+	let filtered_results = $derived(
+		results
+			?.map((result) => {
+				let new_books = result.books.filter((book) => {
+					if (filters.only_matches) {
+						return result.match && book.title === result.match;
+					} else if (filters.only_non_matches) {
+						return !result.match;
+					} else {
+						return !result.match || book.title === result.match;
+					}
+				});
+
+				return {
+					...result,
+					books: new_books,
+				};
+			})
+			.filter((result) => result.books.length)
+	);
 	let lists = $state(get_all_lists());
 	let collapsed = $state<{ [key: string]: boolean }>({});
 	let libraries_raw = $state(get_libraries().join(", "));
 	let libraries = $derived(
-		libraries_raw.split(",").map((e) => e.trim().toLowerCase())
+		libraries_raw
+			.split(",")
+			.map((e) => e.trim().toLowerCase())
+			.filter((e) => e.length)
 	);
 	let installed = $state(false);
+
+	function update_result(new_result: IResult) {
+		if (results && new_result.query) {
+			for (let i = 0; i < results.length; i++) {
+				if (new_result.query === results[i].query) {
+					results[i] = { ...new_result };
+					add_results_to_cache([$state.snapshot(new_result)]);
+				}
+			}
+		}
+	}
 
 	$effect(() => {
 		save_libraries(libraries);
@@ -88,8 +122,8 @@
 		</button>
 	</div>
 
-	<div class="scrollable pb5">
-		<label class="grow">
+	<div class="scrollable flex-col gap1 pb5">
+		<label class="grow flex-row gap1">
 			Libraries:
 			<input class="grow" bind:value={libraries_raw} />
 		</label>
@@ -132,11 +166,32 @@
 						{/if}
 					</div>
 
-					{#if results.length}
-						{#each results as result}
+					<div class="flex-col gap1">
+						<SlideCheck
+							text="Only matches"
+							onchange={(checked) => {
+								filters.only_matches = checked;
+								filters.only_non_matches = false;
+							}}
+							checked={filters.only_matches}
+						/>
+						<SlideCheck
+							text="Only non-matches"
+							onchange={(checked) => {
+								filters.only_non_matches = checked;
+								filters.only_matches = false;
+							}}
+							checked={filters.only_non_matches}
+						/>
+					</div>
+
+					{#if filtered_results?.length}
+						{#each filtered_results as result}
 							<div class="flex-col gap1">
 								<div class="flex-row center sticky dark-purple">
-									<h2 class="no-spacing m0 pw1">
+									<h2
+										class="no-spacing grow m0 pw1 break-all"
+									>
 										{result.query}
 									</h2>
 									<!-- <div class="flex-row right">
@@ -147,116 +202,139 @@
 											Open search in libby
 										</a>
 									</div> -->
-									<button
-										class="shrink"
-										onclick={async (event) => {
-											event.stopPropagation();
-											collapsed[result.query] =
-												!collapsed[result.query];
-										}}
-									>
-										{#if collapsed[result.query]}
-											Expand
-										{:else}
-											Collapse
-										{/if}
-									</button>
+									<div class="shrink flex-col gap0_5">
+										<button
+											class="red"
+											onclick={async (event) => {
+												event.stopPropagation();
+												if (result.query) {
+													results = results?.filter(
+														(some_result) => {
+															return (
+																result.query !==
+																some_result.query
+															);
+														}
+													);
+													current_list!.items =
+														current_list!.items.filter(
+															(item) =>
+																item !==
+																result.query
+														);
+													// TODO: add a list id
+													for (let list of lists) {
+														list.items =
+															list.items.filter(
+																(item) =>
+																	item !==
+																	result.query
+															);
+													}
+													save_lists(lists);
+												}
+											}}
+										>
+											Delete
+										</button>
+										<button
+											onclick={async (event) => {
+												event.stopPropagation();
+												collapsed[result.query] =
+													!collapsed[result.query];
+											}}
+										>
+											{#if collapsed[result.query]}
+												Expand
+											{:else}
+												Collapse
+											{/if}
+										</button>
+									</div>
 								</div>
 								{#if !collapsed[result.query]}
 									{#each result.books as book}
-										{#if !result.match || book.title === result.match}
-											<div class="black p1 purple">
-												<div class="flex-row gap1">
-													{#if book.cover}
-														<img
-															src={book.cover}
-															alt="Cover"
-														/>
+										<div class="black p1 purple">
+											<div class="flex-row gap1">
+												{#if book.cover}
+													<img
+														src={book.cover}
+														alt="Cover"
+													/>
+												{/if}
+												<div class="grow">
+													<h3 class="no-spacing">
+														{book.title}
+													</h3>
+													{#if book.author}
+														<h4
+															class="no-spacing subtitle"
+														>
+															{book.author}
+														</h4>
 													{/if}
-													<div class="grow">
-														<h3 class="no-spacing">
-															{book.title}
-														</h3>
-														{#if book.author}
-															<h4
-																class="no-spacing subtitle"
-															>
-																{book.author}
-															</h4>
-														{/if}
-														{#if book.duration}
-															<h6
-																class="no-spacing subtitle"
-															>
-																Duration {book.duration}
-															</h6>
-														{/if}
-													</div>
-												</div>
-												{#if book.subtitle}
-													<hr />
-													<h4
-														class="no-spacing subtitle"
-													>
-														{book.subtitle}
-													</h4>
-												{/if}
-												{#if book.description}
-													<hr />
-													<p
-														class="no-spacing subtitle description"
-													>
-														{@html book.description}
-													</p>
-												{/if}
-												{#if book.subjects}
-													<hr />
-													<h6
-														class="no-spacing subtitle"
-													>
-														{book.subjects}
-													</h6>
-												{/if}
-												<SlideCheck
-													text="This is the match"
-													onchange={(checked) => {
-														if (checked) {
-															result.match =
-																book.title;
-														} else {
-															result.match =
-																undefined;
-														}
-														add_results_to_cache([
-															$state.snapshot(
-																result
-															),
-														]);
-													}}
-													checked={Boolean(
-														book.title &&
-															book.title ===
-																result.match
-													)}
-												/>
-												<div class="flex-row">
-													<a
-														href={book.sample}
-														target="_blank"
-													>
-														sample
-													</a>
-													<a
-														href={get_libby_url(
-															book.title
-														)}
-														target="_blank"
-													>
-														Open search in libby
-													</a>
+													{#if book.duration}
+														<h6
+															class="no-spacing subtitle"
+														>
+															Duration: {book.duration}
+														</h6>
+													{/if}
 												</div>
 											</div>
-										{/if}
+											{#if book.subtitle}
+												<hr />
+												<h4 class="no-spacing subtitle">
+													{book.subtitle}
+												</h4>
+											{/if}
+											{#if book.description}
+												<hr />
+												<p
+													class="no-spacing subtitle description"
+												>
+													{@html book.description}
+												</p>
+											{/if}
+											{#if book.subjects}
+												<hr />
+												<h6 class="no-spacing subtitle">
+													{book.subjects}
+												</h6>
+											{/if}
+											<SlideCheck
+												text="This is the match"
+												onchange={(checked) => {
+													update_result({
+														...result,
+														match: checked
+															? book.title
+															: undefined,
+													});
+												}}
+												checked={Boolean(
+													book.title &&
+														book.title ===
+															result.match
+												)}
+											/>
+											<div class="flex-row">
+												<a
+													href={book.sample}
+													target="_blank"
+												>
+													sample
+												</a>
+												<a
+													href={get_libby_url(
+														book.title
+													)}
+													target="_blank"
+												>
+													Open search in libby
+												</a>
+											</div>
+										</div>
 									{/each}
 								{/if}
 							</div>
@@ -268,10 +346,19 @@
 					<h3>Searching...</h3>
 				{/if}
 			</div>
-		{/if}
-
-		<div class="flex-col gap1">
-			<div class="flex-col gap1">
+		{:else}
+			<div class="flex-col gap1 mt1">
+				<div class="full-width flex-row center">
+					<button
+						class="green"
+						onclick={() => {
+							add_list({ items: [], title: "New list" });
+							reload();
+						}}
+					>
+						Add new list
+					</button>
+				</div>
 				{#each lists as list}
 					<div class="card selectable black m1 p1 flex-col">
 						<div class="flex-row">
@@ -298,44 +385,6 @@
 						<div class="flex-row gap0_5">
 							<div class="flex-col grow gap0_5">
 								<button
-									class="green p0_5"
-									onclick={async (event) => {
-										event.stopPropagation();
-										set_current_list(list);
-									}}
-								>
-									Search all
-								</button>
-								<button
-									class="blue p0_5"
-									onclick={async (event) => {
-										event.stopPropagation();
-										let new_list = structuredClone(
-											$state.snapshot(list)
-										);
-										new_list.items.splice(10);
-										set_current_list(new_list);
-									}}
-								>
-									Search first 10
-								</button>
-								<button
-									class="purple p0_5"
-									onclick={async (event) => {
-										event.stopPropagation();
-										let new_list = structuredClone(
-											$state.snapshot(list)
-										);
-										shuffle(new_list.items);
-										new_list.items.splice(10);
-										set_current_list(new_list);
-									}}
-								>
-									Search random 10
-								</button>
-							</div>
-							<div class="flex-col grow gap0_5">
-								<button
 									class="p0_5"
 									onclick={async () => {
 										await navigator.clipboard.writeText(
@@ -343,6 +392,7 @@
 										);
 										notify("Copied to clipboard :)");
 									}}
+									disabled={!list.items.length}
 								>
 									Copy list to clipboard
 								</button>
@@ -357,14 +407,66 @@
 									Delete list
 								</button>
 							</div>
+							<div class="flex-col grow gap0_5">
+								<button
+									class="green p0_5"
+									onclick={async (event) => {
+										event.stopPropagation();
+										set_current_list(list);
+									}}
+									disabled={!libraries.length}
+								>
+									Search all
+								</button>
+								<button
+									class="blue p0_5"
+									onclick={async (event) => {
+										event.stopPropagation();
+										let new_list = structuredClone(
+											$state.snapshot(list)
+										);
+										new_list.items.splice(10);
+										set_current_list(new_list);
+									}}
+									disabled={!libraries.length}
+								>
+									Search first 10
+								</button>
+								<button
+									class="purple p0_5"
+									onclick={async (event) => {
+										event.stopPropagation();
+										let new_list = structuredClone(
+											$state.snapshot(list)
+										);
+										shuffle(new_list.items);
+										new_list.items.splice(10);
+										set_current_list(new_list);
+									}}
+									disabled={!libraries.length}
+								>
+									Search random 10
+								</button>
+							</div>
 						</div>
 						<ul
 							class="scrollable no-padding no-style flex-col gap1"
 							style="max-height: 30vh"
 						>
-							{#each list.items as item}
+							{#each list.items as item, i}
 								<li class="grey flex-row">
-									<span class="grow p1">{item}</span>
+									<input
+										class="grow"
+										bind:value={list.items[i]}
+										onkeydown={(event) => {
+											if (event.key === "Enter") {
+												list.items.push("");
+											}
+										}}
+										onchange={() => {
+											save_lists(lists);
+										}}
+									/>
 									<button
 										class="red shrink"
 										onclick={async (event) => {
@@ -383,9 +485,18 @@
 								</li>
 							{/each}
 						</ul>
+						<button
+							class="green"
+							onclick={(event) => {
+								event.stopPropagation();
+								list.items.push("");
+							}}
+						>
+							Add item
+						</button>
 					</div>
 				{/each}
 			</div>
-		</div>
+		{/if}
 	</div>
 </main>
