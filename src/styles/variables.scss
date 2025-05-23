@@ -1,0 +1,63 @@
+:root {
+	--z-index-focus-pane: 100;
+
+	--z-index-nav: 998;
+	--z-index-floating-button: 999;
+
+	--z-index-pane: 1000;
+	--z-index-overlay: 1001;
+	--z-index-dropdown: 1002;
+	--z-index-overlay-popup: 1003;
+}
+
+body {
+	--color-text: white;
+	--color-background: black;
+	--color-body-background: #3e3e42;
+
+	--color-card-background: #292929;
+
+	--color-disabled-text: grey;
+
+	--color-button-text: #4da4de;
+
+	--color-list-item-even: #1a1a1a;
+	--color-selected-list-item-even: #5e1516;
+
+	--color-list-item-odd: black;
+	--color-selected-list-item-odd: #4f0000;
+
+	--color-nav-background: #000305;
+	--color-subnav-background: #1b1b1b;
+
+	--color-amount-text: #00ff7c;
+
+	--color-ingredient-text: black;
+	--color-ingredient-background: #bb86fc;
+	--color-ingredient-selected-text: black;
+	--color-ingredient-selected-background: #03dac6;
+
+	--color-failed: #cf6679;
+
+	--color-selected-label: #310f0b;
+
+	--color-focus-pane-border: white;
+	--color-focus-pane-background: black;
+	--color-focus-pane-header: black;
+
+	--color-choice-button-selected-text: black;
+	--color-choice-button-selected-background: white;
+
+	--color-hamburger-background: #282e33;
+
+	--color-default-notification-background: #1c2257;
+	--color-error-notification-background: #fa8072;
+	--color-success-notification-background: #338356;
+
+	--color-overlay-background: rgba(0, 0, 0, 0.511);
+	--color-popup-background: #535353;
+}
+
+body.light-theme {
+	--color-focus-pane-border: black;
+}

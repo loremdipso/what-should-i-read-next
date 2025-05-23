@@ -18,6 +18,12 @@
 	} from "../lib/utils";
 	import { notify, install_prompt } from "../lib/globals.svelte";
 	import SlideCheck from "./SlideCheck.svelte";
+	import { onMount } from "svelte";
+	import Collapsible from "./Collapsible.svelte";
+	import CloseIcon from "../lib/icons/close_icon.svelte";
+	import ShuffleIcon from "../lib/icons/shuffle_icon.svelte";
+	import ReloadIcon from "../lib/icons/reload_icon.svelte";
+	import TrashCanIcon from "../lib/icons/trash_can_icon.svelte";
 
 	function reload() {
 		lists = get_all_lists();
@@ -26,7 +32,6 @@
 	async function set_current_list(list: IList, force_reload = false) {
 		results = undefined;
 		current_list = list;
-		collapsed = {};
 		results = (
 			await find_books(current_list.items, libraries, force_reload)
 		).filter((e) => e.books.length);
@@ -56,7 +61,6 @@
 			.filter((result) => result.books.length)
 	);
 	let lists = $state(get_all_lists());
-	let collapsed = $state<{ [key: string]: boolean }>({});
 	let libraries_raw = $state(get_libraries().join(", "));
 	let libraries = $derived(
 		libraries_raw
@@ -80,6 +84,12 @@
 	$effect(() => {
 		save_libraries(libraries);
 	});
+
+	// onMount(() => {
+	// 	let new_list = structuredClone($state.snapshot(lists[0]));
+	// 	new_list.items.splice(10);
+	// 	set_current_list(new_list);
+	// });
 </script>
 
 <main class="flex-col gap1">
@@ -123,25 +133,19 @@
 	</div>
 
 	<div class="scrollable flex-col gap1 pb5">
-		<label class="grow flex-row gap1">
-			Libraries:
-			<input class="grow" bind:value={libraries_raw} />
-		</label>
+		<div class="black p1 rounded">
+			<label class="grow flex-row gap1">
+				Libraries:
+				<input class="grow" bind:value={libraries_raw} />
+			</label>
+		</div>
 
 		{#if current_list}
-			<div class="card selectable black flex-col gap1">
+			<div class="card selectable gray flex-col gap1">
 				{#if results}
 					<div class="flex-row">
 						<button
-							onclick={async (event) => {
-								event.stopPropagation();
-								current_list = null;
-							}}
-						>
-							Close
-						</button>
-						<button
-							class="blue"
+							class="blue vertically-centered gap0_5 flex-row justify-center"
 							onclick={async (event) => {
 								event.stopPropagation();
 								if (current_list) {
@@ -149,11 +153,12 @@
 								}
 							}}
 						>
+							<ReloadIcon />
 							Reload
 						</button>
 						{#if results.length}
 							<button
-								class="purple"
+								class="purple vertically-centered gap0_5 flex-row justify-center"
 								onclick={async (event) => {
 									event.stopPropagation();
 									if (results) {
@@ -161,9 +166,20 @@
 									}
 								}}
 							>
+								<ShuffleIcon />
 								Shuffle
 							</button>
 						{/if}
+						<button
+							class="vertically-centered gap0_5 flex-row justify-center"
+							onclick={async (event) => {
+								event.stopPropagation();
+								current_list = null;
+							}}
+						>
+							<CloseIcon />
+							Close
+						</button>
 					</div>
 
 					<div class="flex-col gap1">
@@ -187,13 +203,8 @@
 
 					{#if filtered_results?.length}
 						{#each filtered_results as result}
-							<div class="flex-col gap1">
-								<div class="flex-row center sticky dark-purple">
-									<h2
-										class="no-spacing grow m0 pw1 break-all"
-									>
-										{result.query}
-									</h2>
+							<Collapsible title={result.query} collapsed={false}>
+								{#snippet prefix()}
 									<!-- <div class="flex-row right">
 										<a
 											href={get_libby_url(result.query)}
@@ -204,7 +215,7 @@
 									</div> -->
 									<div class="shrink flex-col gap0_5">
 										<button
-											class="red"
+											class="red flex-row vertically-centered gap0_5 rounded"
 											onclick={async (event) => {
 												event.stopPropagation();
 												if (result.query) {
@@ -235,109 +246,116 @@
 												}
 											}}
 										>
+											<TrashCanIcon />
 											Delete
 										</button>
-										<button
-											onclick={async (event) => {
-												event.stopPropagation();
-												collapsed[result.query] =
-													!collapsed[result.query];
-											}}
-										>
-											{#if collapsed[result.query]}
-												Expand
-											{:else}
-												Collapse
-											{/if}
-										</button>
 									</div>
-								</div>
-								{#if !collapsed[result.query]}
-									{#each result.books as book}
-										<div class="black p1 purple">
-											<div class="flex-row gap1">
-												{#if book.cover}
-													<img
-														src={book.cover}
-														alt="Cover"
-													/>
-												{/if}
-												<div class="grow">
-													<h3 class="no-spacing">
-														{book.title}
-													</h3>
-													{#if book.author}
+								{/snippet}
+
+								{#snippet content()}
+									<div class="black">
+										<div class="ph1 flex-col gap0_5">
+											{#each result.books as book (book)}
+												<div
+													class="rounded lightgray p1 mw1"
+												>
+													<div class="flex-row gap1">
+														{#if book.cover}
+															<img
+																src={book.cover}
+																alt="Cover"
+															/>
+														{/if}
+														<div class="grow">
+															<h3
+																class="no-spacing"
+															>
+																{book.title}
+															</h3>
+															{#if book.author}
+																<h4
+																	class="no-spacing subtitle"
+																>
+																	{book.author}
+																</h4>
+															{/if}
+															{#if book.duration}
+																<h6
+																	class="no-spacing subtitle"
+																>
+																	Duration: {book.duration}
+																</h6>
+															{/if}
+															<div class="ph1">
+																<SlideCheck
+																	text="This is the match"
+																	onchange={(
+																		checked
+																	) => {
+																		update_result(
+																			{
+																				...result,
+																				match: checked
+																					? book.title
+																					: undefined,
+																			}
+																		);
+																	}}
+																	checked={Boolean(
+																		book.title &&
+																			book.title ===
+																				result.match
+																	)}
+																/>
+															</div>
+														</div>
+													</div>
+													{#if book.subtitle}
+														<hr />
 														<h4
 															class="no-spacing subtitle"
 														>
-															{book.author}
+															{book.subtitle}
 														</h4>
 													{/if}
-													{#if book.duration}
+													{#if book.description}
+														<hr />
+														<p
+															class="no-spacing subtitle description"
+														>
+															{@html book.description}
+														</p>
+													{/if}
+													{#if book.subjects}
+														<hr />
 														<h6
 															class="no-spacing subtitle"
 														>
-															Duration: {book.duration}
+															{book.subjects}
 														</h6>
 													{/if}
+													<div class="flex-row">
+														<a
+															href={book.sample}
+															target="_blank"
+														>
+															sample
+														</a>
+														<a
+															href={get_libby_url(
+																book.title
+															)}
+															target="_blank"
+														>
+															Open search in libby
+														</a>
+													</div>
 												</div>
-											</div>
-											{#if book.subtitle}
-												<hr />
-												<h4 class="no-spacing subtitle">
-													{book.subtitle}
-												</h4>
-											{/if}
-											{#if book.description}
-												<hr />
-												<p
-													class="no-spacing subtitle description"
-												>
-													{@html book.description}
-												</p>
-											{/if}
-											{#if book.subjects}
-												<hr />
-												<h6 class="no-spacing subtitle">
-													{book.subjects}
-												</h6>
-											{/if}
-											<SlideCheck
-												text="This is the match"
-												onchange={(checked) => {
-													update_result({
-														...result,
-														match: checked
-															? book.title
-															: undefined,
-													});
-												}}
-												checked={Boolean(
-													book.title &&
-														book.title ===
-															result.match
-												)}
-											/>
-											<div class="flex-row">
-												<a
-													href={book.sample}
-													target="_blank"
-												>
-													sample
-												</a>
-												<a
-													href={get_libby_url(
-														book.title
-													)}
-													target="_blank"
-												>
-													Open search in libby
-												</a>
-											</div>
+											{/each}
 										</div>
-									{/each}
-								{/if}
-							</div>
+									</div>
+								{/snippet}
+							</Collapsible>
 						{/each}
 					{:else}
 						<h3>No results :/</h3>
