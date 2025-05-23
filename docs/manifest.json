@@ -2,6 +2,7 @@
 	"short_name": "What should I read next?",
 	"name": "What should I read next?",
 	"description": "Find out what I should read next",
+	"scope": "/what-should-i-read-next/",
 	"icons": [
 		{
 			"src": "favicon-192x192.png",
