@@ -17,9 +17,10 @@
 	"display": "standalone",
 	"theme_color": "#000000",
 	"background_color": "#ffffff",
-	"start_url": "/what-should-i-read-next",
+	"start_url": "/what-should-i-read-next/",
+	"scope": "/what-should-i-read-next/",
 	"share_target": {
-		"action": "https://loremdipso.com/what-should-i-read-next",
+		"action": "https://loremdipso.com/what-should-i-read-next/",
 		"method": "GET",
 		"enctype": "application/x-www-form-urlencoded",
 		"params": {
